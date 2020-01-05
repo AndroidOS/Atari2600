@@ -4,27 +4,27 @@
   include "macro.h"
 
   org $F000
-  
+
 ;base on Gustavo Pezzi's work.
 
 START:
   CLEAN_START     ; Macro to clear memory
 
-; Start a new frame - Turn on VBLANK and VSYNC
-NextFrame:
+  ; Start a new frame - Turn on VBLANK and VSYNC
+StartFrame:
   lda #2          ;same as binary value %00000010
   sta VBLANK      ;turn on VBLANK
   sta VSYNC       ;turn on VSYNC
 
-; Generate the 3 lines of VSYNC
+  ; Generate the 3 lines of VSYNC
   sta WSYNC       ;first scanline
   sta WSYNC       ;second scanline
   sta WSYNC       ;third scanline
   lda #0
-  sta WSYNC       ;turn off VSYNC
+  sta VSYNC       ;turn off VSYNC
 
-; TIA generate 37 scanlines of VBLANK
-  lda #37         ;X = 37 (to count 37 scanlines)
+  ; TIA generate 37 scanlines of VBLANK
+  ldx #37         ;X = 37 (to count 37 scanlines)
 LoopVBlank:
   sta WSYNC       ;hit WSYNC and wait for the next scanline
   dex             ;dec x by 1
@@ -32,7 +32,7 @@ LoopVBlank:
   lda #0
   sta VBLANK      ;Turn off VBLANK
 
-; Draw 192 visible scanlines (kernel)
+  ; Draw 192 visible scanlines (kernel)
   ldx #192        ;counter for 192 visible scanlines
 LoopVisible:
   stx COLUBK      ;set the background colour
@@ -40,7 +40,7 @@ LoopVisible:
   dex             ;x--
   bne LoopVisible ;Loop while x != 0
 
-;Output 30 more VBLANK lines (overscan) to complete frame
+  ;Output 30 more VBLANK lines (overscan) to complete frame
   lda #2          ;Turn on VBLANK again
   sta VBLANK
   ldx #30         ;Counter for 30 scanlines
@@ -49,9 +49,9 @@ LoopOverscan:
   dex             ;x--
   bne LoopOverscan ;Loop while x != 0
 
-  jmp NextFrame
+  jmp StartFrame
 
-;Complete 4K ROM
+  ;Complete 4K ROM
   org $FFFC ; 6502 start vector location
   .word START ; START memory location
   .word START ; Fill ROM to 4K
